@@ -331,5 +331,5 @@ validity is only partially supported.
 
 ## GitHub Links
 
-- [GitHub Repository](REPOSITORY_URL)
-- [GitHub Pages](PAGES_URL)
+- [GitHub Repository](https://github.com/WillySuu/IC-Case-31--Summary-of-Data-Analysis)
+- [GitHub Pages](https://willysuu.github.io/IC-Case-31--Summary-of-Data-Analysis/)
