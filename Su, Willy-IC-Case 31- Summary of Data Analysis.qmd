@@ -1,0 +1,335 @@
+---
+title: "IC-Case 31 - Summary of Data Analysis"
+subtitle: "Reliability and Factor Analysis for R3 and R6"
+author: "Willy Su"
+date: "2026-11-24"
+format:
+  html:
+    toc: true
+    toc-depth: 3
+    number-sections: true
+    embed-resources: true
+    code-fold: true
+    theme: cosmo
+editor: visual
+---
+
+# Data Preparation
+
+This analysis examines the reliability and construct validity of two multi-item scales in Case 31:
+
+-   R3: Attitude toward Employee Proficiency (Q3–Q6)
+-   R6: Attitude toward Operational Effectiveness (Q31–Q34)
+
+```{r}
+#| label: setup
+#| include: false
+
+library(haven)
+library(dplyr)
+library(psych)
+library(ggplot2)
+library(knitr)
+
+efcu <- read_sav("../Case 31 Data_efcu_4.sav")
+names(efcu) <- tolower(names(efcu))
+```
+
+## Variable Selection
+
+```{r}
+r3_items <- efcu |>
+  select(q3, q4, q5, q6)
+
+r6_items <- efcu |>
+  select(q31, q32, q33, q34)
+
+dim(efcu)
+
+summary(r3_items)
+summary(r6_items)
+```
+
+# R3: Attitude toward Employee Proficiency
+
+## Exploratory Factor Analysis
+
+Exploratory factor analysis is conducted on Q3–Q6
+to examine whether the four items measure a single
+underlying construct.
+
+### KMO and Bartlett's Test
+
+```{r}
+psych::KMO(r3_items)
+
+psych::cortest.bartlett(
+  cor(r3_items),
+  n = nrow(r3_items)
+)
+```
+
+### Parallel Analysis
+
+```{r}
+#| label: fig-r3-parallel
+#| fig-cap: "Parallel Analysis for Employee Proficiency"
+#| fig-width: 7
+#| fig-height: 5
+
+set.seed(123)
+
+psych::fa.parallel(
+  r3_items,
+  fa = "fa",
+  fm = "minres",
+  n.iter = 100
+)
+```
+
+### Factor Loadings and Communalities
+
+```{r}
+r3_efa <- psych::fa(
+  r3_items,
+  nfactors = 1,
+  rotate = "none",
+  fm = "minres"
+)
+
+print(r3_efa, digits = 3)
+```
+
+### Interpretation
+
+The KMO value of 0.78 and significant Bartlett's
+test (p < 0.001) indicate that the data are
+suitable for factor analysis.
+
+Factor loadings range from 0.722 to 0.923, and
+all communalities exceed 0.50. The one-factor
+solution explains 63.3% of the total variance,
+providing evidence of convergent validity.
+
+However, the model fit indices suggest that the
+one-factor structure should be interpreted with
+caution. Further reliability and discriminant
+validity analyses are needed before confirming
+the composite scale.
+
+# R6: Attitude toward Operational Effectiveness
+
+## Exploratory Factor Analysis
+
+Exploratory factor analysis is conducted on Q31–Q34
+to assess the convergent validity of the operational
+effectiveness scale.
+
+### KMO and Bartlett's Test
+
+```{r}
+psych::KMO(r6_items)
+
+psych::cortest.bartlett(
+  cor(r6_items),
+  n = nrow(r6_items)
+)
+```
+
+### Parallel Analysis
+
+```{r}
+#| label: fig-r6-parallel
+#| fig-cap: "Parallel Analysis for Operational Effectiveness"
+#| fig-width: 7
+#| fig-height: 5
+
+set.seed(123)
+
+r6_parallel <- psych::fa.parallel(
+  r6_items,
+  fa = "fa",
+  fm = "minres",
+  n.iter = 100
+)
+
+r6_parallel$nfact
+```
+
+### Factor Loadings and Communalities
+
+```{r}
+r6_efa <- psych::fa(
+  r6_items,
+  nfactors = 1,
+  rotate = "none",
+  fm = "minres"
+)
+
+print(r6_efa, digits = 3)
+```
+
+### Interpretation
+
+The KMO value of 0.50 indicates marginal sampling
+adequacy. Although Bartlett's test is significant
+(p < 0.001), most factor loadings and communalities
+are low.
+
+The one-factor solution explains only 31.4% of
+the variance and produces an ultra-Heywood case.
+These results indicate weak convergent validity
+and do not support creating a composite scale
+at this stage.
+
+# Combined Factor Analysis
+
+## Discriminant Validity
+
+A combined factor analysis is conducted on Q3–Q6
+and Q31–Q34 to examine whether employee proficiency
+and operational effectiveness represent two
+distinct constructs.
+
+### Parallel Analysis
+
+```{r}
+combined_items <- cbind(r3_items, r6_items)
+```
+
+```{r}
+#| label: fig-combined-parallel
+#| fig-cap: "Parallel Analysis for Both Constructs"
+#| fig-width: 7
+#| fig-height: 5
+
+set.seed(123)
+
+combined_parallel <- psych::fa.parallel(
+  combined_items,
+  fa = "fa",
+  fm = "minres",
+  n.iter = 100
+)
+
+combined_parallel$nfact
+```
+
+### Two-Factor Solution
+
+```{r}
+combined_efa <- psych::fa(
+  combined_items,
+  nfactors = 2,
+  rotate = "oblimin",
+  fm = "minres"
+)
+
+print(combined_efa, digits = 3, cutoff = 0)
+
+combined_efa$Phi
+```
+
+### Factor Diagram
+
+```{r}
+#| label: fig-combined-factor
+#| fig-cap: "Factor Structure of R3 and R6"
+#| fig-width: 8
+#| fig-height: 6
+
+psych::fa.diagram(combined_efa)
+```
+
+### Interpretation
+
+Parallel analysis suggests a two-factor structure.
+R3 items load strongly on the same factor, while
+R6 items show weak and inconsistent loadings.
+
+The factor correlation is 0.401. However, the
+ultra-Heywood case and weak R6 loadings indicate
+that discriminant validity is not fully supported.
+
+# Reliability Analysis
+
+Cronbach's alpha is used to assess the internal
+consistency of the R3 and R6 multi-item scales.
+
+## R3: Employee Proficiency
+
+```{r}
+r3_alpha <- psych::alpha(r3_items)
+
+print(r3_alpha, digits = 3)
+```
+
+## R6: Operational Effectiveness
+
+```{r}
+r6_alpha <- psych::alpha(r6_items)
+
+print(r6_alpha, digits = 3)
+```
+
+## Reliability Summary
+
+```{r}
+reliability_summary <- data.frame(
+  Scale = c("R3", "R6"),
+  Items = c(4, 4),
+  Cronbach_Alpha = c(
+    r3_alpha$total$raw_alpha,
+    r6_alpha$total$raw_alpha
+  )
+)
+
+knitr::kable(
+  reliability_summary,
+  digits = 3,
+  caption = "Reliability Analysis Summary"
+)
+```
+
+## Interpretation
+
+R3 demonstrates good internal consistency
+(Cronbach's alpha = 0.866). Removing any item
+reduces reliability, supporting the retention
+of all four items.
+
+R6 demonstrates low internal consistency
+(Cronbach's alpha = 0.472). Removing individual
+items does not substantially improve reliability.
+Therefore, the R6 items should be analyzed
+individually.
+
+# Composite Scale Decision and Conclusion
+
+## R3: Employee Proficiency
+
+R3 demonstrates good internal consistency
+(alpha = 0.866) and strong factor loadings.
+Despite limitations in model fit, Q3–Q6 can
+be combined into a composite scale by averaging
+the four items, with caution.
+
+## R6: Operational Effectiveness
+
+R6 demonstrates low reliability (alpha = 0.472)
+and weak convergent validity. Therefore, Q31–Q34
+should be analyzed individually rather than
+combined into a composite scale.
+
+## Conclusion
+
+The results support using a composite scale for
+R3 with caution, but not for R6. Discriminant
+validity is only partially supported.
+
+# Appendix
+
+## GitHub Links
+
+- [GitHub Repository](REPOSITORY_URL)
+- [GitHub Pages](PAGES_URL)
